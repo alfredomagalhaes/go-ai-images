@@ -19,3 +19,21 @@
 
 # Go workspace file
 go.work
+
+#Vs Code folder
+.vscode
+
+#Binaries folder
+bin
+
+#Templ files
+*_templ.go*
+
+#node modules folder
+node_modules
+
+#Env files
+.env
+
+#CSS style files
+styles.css
