@@ -37,3 +37,6 @@ node_modules
 
 #CSS style files
 styles.css
+
+#Temporary folder
+tmp

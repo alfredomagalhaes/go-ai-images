@@ -1,5 +1,7 @@
 package layout
 
+import "github.com/alfredomagalhaes/go-ai-images/view/ui"
+
 templ App(nav bool) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme="night">
@@ -15,8 +17,7 @@ templ App(nav bool) {
 		</head>
 		<body class="antialiased">
 			if nav {
-				//@ui.Navigation()
-        Navigation
+        @ui.Navigation()
 			}
 			{ children... }
 		</body>
