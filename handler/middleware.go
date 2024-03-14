@@ -15,10 +15,7 @@ func WithUser(next http.Handler) http.Handler {
 			return
 		}
 
-		user := types.AuthenticatedUser{
-			Email:    "alfredo@gmail.com",
-			LoggedIn: true,
-		}
+		user := types.AuthenticatedUser{}
 		ctx := context.WithValue(r.Context(), types.UserContextKey, user)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
