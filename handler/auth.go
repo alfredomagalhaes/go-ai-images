@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -70,8 +71,45 @@ func HandleLoginCreate(w http.ResponseWriter, r *http.Request) error {
 		}))
 	}
 
+	setAuthCookie(w, resp.AccessToken)
+
+	//http.Redirect(w, r, "", http.StatusSeeOther)
+
+	return hxRedirect(w, r, "/")
+}
+
+func HandleAuthCallback(w http.ResponseWriter, r *http.Request) error {
+
+	fmt.Println("entrou no callback")
+	accessToken := r.URL.Query().Get("access_token")
+
+	fmt.Printf("token %s", accessToken)
+	if len(accessToken) == 0 {
+		return render(w, r, auth.CallbackScript())
+	}
+	setAuthCookie(w, accessToken)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+	return nil
+}
+
+func HandleLogoutCreate(w http.ResponseWriter, r *http.Request) error {
 	cookie := &http.Cookie{
-		Value:    resp.AccessToken,
+		Value:    "",
+		Name:     "at",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Path:     "/",
+		Secure:   true,
+	}
+
+	http.SetCookie(w, cookie)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	return nil
+}
+
+func setAuthCookie(w http.ResponseWriter, accessToken string) {
+	cookie := &http.Cookie{
+		Value:    accessToken,
 		Name:     "at",
 		Path:     "/",
 		HttpOnly: true,
@@ -79,7 +117,4 @@ func HandleLoginCreate(w http.ResponseWriter, r *http.Request) error {
 	}
 	http.SetCookie(w, cookie)
 
-	http.Redirect(w, r, "", http.StatusSeeOther)
-
-	return nil
 }

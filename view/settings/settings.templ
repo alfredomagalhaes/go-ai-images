@@ -1,0 +1,10 @@
+package settings
+
+import "github.com/alfredomagalhaes/go-ai-images/view/layout"
+import "github.com/alfredomagalhaes/go-ai-images/types"
+
+templ Index(user types.AuthenticatedUser) {
+  @layout.App(true) {
+    <div> hello {user.Email} </div>
+  }
+}
