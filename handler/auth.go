@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/alfredomagalhaes/go-ai-images/db"
 	"github.com/alfredomagalhaes/go-ai-images/pkg/kit/validate"
 	"github.com/alfredomagalhaes/go-ai-images/pkg/sb"
 	"github.com/alfredomagalhaes/go-ai-images/pkg/util"
+	"github.com/alfredomagalhaes/go-ai-images/types"
 	"github.com/alfredomagalhaes/go-ai-images/view/auth"
 	"github.com/gorilla/sessions"
 	"github.com/nedpals/supabase-go"
@@ -18,6 +20,33 @@ const (
 	sessionUserKey        = "user"
 	sessionAccessTokenKey = "accessToken"
 )
+
+func HandleAccountSetupIndex(w http.ResponseWriter, r *http.Request) error {
+	return render(w, r, auth.AccountSetup())
+}
+
+func HandleAccountSetupCreate(w http.ResponseWriter, r *http.Request) error {
+	params := auth.AccountSetupParams{
+		UserName: r.FormValue("username"),
+	}
+	var errors auth.AccountSetupErrors
+	if ok := validate.New(&params, validate.Fields{
+		"UserName": validate.Rules(validate.Max(50)),
+	}).Validate(&errors); !ok {
+
+		return render(w, r, auth.AccountSetupForm(params, errors))
+	}
+	user := getAuthenticatedUser(r)
+	account := types.Account{
+		UserID:    user.ID,
+		UserName:  params.UserName,
+		UserEmail: user.Email,
+	}
+	if err := db.CreateAccount(&account); err != nil {
+		return err
+	}
+	return hxRedirect(w, r, "/")
+}
 
 func HandleLoginIndex(w http.ResponseWriter, r *http.Request) error {
 	return render(w, r, auth.Login())

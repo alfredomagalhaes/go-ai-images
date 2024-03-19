@@ -2,12 +2,16 @@ package handler
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"net/http"
 	"os"
 	"strings"
 
+	"github.com/alfredomagalhaes/go-ai-images/db"
 	"github.com/alfredomagalhaes/go-ai-images/pkg/sb"
 	"github.com/alfredomagalhaes/go-ai-images/types"
+	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 )
 
@@ -24,6 +28,28 @@ func WithAuth(next http.Handler) http.Handler {
 			return
 		}
 		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
+}
+
+func WithAccountSetup(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		user := getAuthenticatedUser(r)
+		account, err := db.GetAccountByUserID(user.ID)
+		//The user has not setup his account yet
+		//Hence, redirect him to /account/setup
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				http.Redirect(w, r, "/account/setup", http.StatusSeeOther)
+				return
+			}
+			next.ServeHTTP(w, r)
+			return
+		}
+		user.Account = account
+		ctx := context.WithValue(r.Context(), types.UserContextKey, user)
+		next.ServeHTTP(w, r.WithContext(ctx))
+
 	}
 	return http.HandlerFunc(fn)
 }
@@ -48,9 +74,11 @@ func WithUser(next http.Handler) http.Handler {
 		}
 
 		user := types.AuthenticatedUser{
+			ID:       uuid.MustParse(resp.ID),
 			Email:    resp.Email,
 			LoggedIn: true,
 		}
+
 		ctx := context.WithValue(r.Context(), types.UserContextKey, user)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
